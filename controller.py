@@ -14,3 +14,11 @@ def register_user(username,password):
     db.session.commit()
 
     return new_user
+
+def check_user(username,password):
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user and check_password_hash(existing_user.password, password):
+
+        return True   
+    else:
+        return False

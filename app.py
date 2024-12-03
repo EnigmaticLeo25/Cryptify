@@ -4,7 +4,7 @@ from routes import configure_routes
 
 # Initialize the Flask app
 app = Flask(__name__)
-
+app.secret_key = 'your_secret_key'
 # Initialize the database
 init_db(app)
 

@@ -27,3 +27,5 @@ def configure_routes(app):
     @app.route('/home')
     def home():
         return render_template('home.html')
+    
+    

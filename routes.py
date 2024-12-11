@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session,jsonify,make_response
 from controller import *
 from database import db
+from controller import supabase
 
 def configure_routes(app):
     @app.route('/login',methods=['GET','POST'])
@@ -14,7 +15,7 @@ def configure_routes(app):
             if(return_details[0]):
                 flash('Login successful!', 'success')
                 response = make_response(redirect(url_for('home')))
-                response.set_cookie("authToken",return_details[1].username)
+                response.set_cookie("authToken",return_details[1][0]["username"])
                 return response
             else:
                 flash('Invalid username or password', 'danger')
@@ -36,10 +37,14 @@ def configure_routes(app):
     def home():
         auth_token = request.cookies.get('authToken')
         if auth_token:
-            users = User.query.all()
+            users = (
+                supabase.table("User").select().execute()
+            ).data
             return render_template('home.html',users=users,user_cookie = auth_token)
         else:
-            users = User.query.all()
+            users = (
+                supabase.table("User").select().execute()
+            ).data
             return render_template('home.html',users=users)
         
     @app.route('/logout')
@@ -57,13 +62,19 @@ def configure_routes(app):
             balance = getBalance(priv_key)
             if auth_token:
                 if balance!=-1:
-                    users = User.query.all()
+                    users = (
+                supabase.table("User").select().execute()
+            )
                     return render_template('home.html',users=users,user_cookie = auth_token,bank_details=balance)
                 else:
-                    users = User.query.all()
+                    users = (
+                supabase.table("User").select().execute()
+            )
                     return render_template('home.html',users=users,user_cookie = auth_token)    
             else:
-                users = User.query.all()
+                users = (
+                supabase.table("User").select().execute()
+                )
                 return render_template('home.html',users=users)
         
     

@@ -40,9 +40,15 @@
                     <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="#">Home</a>
                     </li>
+                    {% if user_cookie %}
                     <li class="nav-item">
                         <a class="nav-link" href="#">My Account</a>
                     </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="./login">Login</a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="#">Transactions</a>
                     </li>

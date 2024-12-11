@@ -12,10 +12,52 @@
     {% include 'bgtemplate.html' %}
 
     <!-- Home Container -->
-    <div class="container d-flex flex-column justify-content-center align-items-center vh-100">
+    <!-- <div class="container d-flex flex-column justify-content-center align-items-center vh-100">
         <h1 class="mb-4">Welcome to SocialApp</h1>
         <a href="/logout" class="btn btn-danger btn-lg">Logout</a>
+    </div> -->
+    {% if user_cookie %}
+    <div class="container mt-5">
+        <div class="card border-secondary shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Bank Account Login</h5>
+            </div>
+            <div class="card-body bg-white">
+                {% if bank_details %}
+                <div id="account-details" class="d-none">
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <strong>Account Number:</strong>
+                        </div>
+                        <div class="col-sm-6 text-end">
+                            <span>1234 5678 9012</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <strong>Balance:</strong>
+                        </div>
+                        <div class="col-sm-6 text-end text-success">
+                            <span>$5,000.00</span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div id="login-section">
+                    <form action="/bank" method="POST">   
+                        <div class="mb-3">
+                            <label for="privateKey" class="form-label"><strong>Enter Private Key:</strong></label>
+                            <input type="password" name="priv_key" class="form-control" placeholder="Enter your private key">
+                        </div> 
+                        <button type="submit" class="btn btn-secondary w-100">Submit</button>
+                    </form>  
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
+    {% endif %}
+
     <div class="container d-flex flex-column justify-content-center align items-center vh-100">
         <table>
             <tr>

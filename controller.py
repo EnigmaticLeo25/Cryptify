@@ -1,4 +1,4 @@
-from models import User  
+from models import User,Bank
 from database import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -23,3 +23,10 @@ def check_user(email,password):
     else:
         return_details = [False,existing_user]
         return return_details
+
+def getBalance(priv_key):
+    existing_bank = Bank.query.filter_by(user_public_key=priv_key).first()
+    if existing_bank:
+        return existing_bank.encrypted_balance
+    else:
+        return -1

@@ -48,3 +48,12 @@ def getBalance(priv_key):
         return existing_bank.encrypted_balance
     else:
         return -1
+    
+def getTransactions(balance_id):
+    transactions = (
+        supabase.table("Transactions").select("*").eq("user_id",balance_id).execute()
+    )
+    count = transactions.count
+    transactions = transactions.data
+    return [count,transactions]
+    

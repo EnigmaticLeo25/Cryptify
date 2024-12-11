@@ -76,6 +76,12 @@ def configure_routes(app):
                 supabase.table("User").select().execute()
                 )
                 return render_template('home.html',users=users)
+    @app.route("/transactions")
+    def transactions():
+        # transaction_list = getTransactions(balance_id)
+        # if(transaction_list[1]):
+        #     return render_template('transactions.html',count = transaction_list[0],transactions = transaction_list[1])
+        return render_template("transactions.html")
         
     
     

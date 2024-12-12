@@ -56,16 +56,19 @@ def configure_routes(app):
             auth_token = request.cookies.get('authToken')
             priv_key = request.form.get('priv_key')
             balance = getBalance(priv_key)
+            print(auth_token)
             if auth_token:
                 if balance!=-1:
                     users = (
                 supabase.table("User").select().execute()
             )
+                    print(balance)
                     return render_template('home.html',users=users,user_cookie = auth_token,bank_details=balance)
                 else:
                     users = (
                 supabase.table("User").select().execute()
             )
+                    print(balance)
                     return render_template('home.html',users=users,user_cookie = auth_token)    
             else:
                 users = (
@@ -92,5 +95,14 @@ def configure_routes(app):
         #     return render_template('transactions.html',count = transaction_list[0],transactions = transaction_list[1])
         return render_template("transactions.html")
         
-    
+    @app.route("/account",methods=['POST'])
+    def account():
+        if request.method == 'POST':
+            accountName = request.form.get('accountId')
+            account = getAccount(accountName)
+            if account == -1:
+                flash('Wrong username entered')
+                return render_template('transactions.html')
+            else:
+                return render_template('transactions.html',accountVerified = True)
     

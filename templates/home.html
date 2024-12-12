@@ -1,89 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
     <style>
-        /* Custom styling to make the text black */
-        .modal-body {
-            color: black;
-        }
-        .modal-title {
-            color: black;
-        }
+      /* Custom styling to make the text black */
+      .modal-body {
+        color: white;
+      }
+      .modal-title {
+        color: white;
+      }
     </style>
-</head>
-<body class="bg-dark text-light text-center">
+  </head>
+  <body class="bg-dark text-light text-center">
     <!-- Include Background Template -->
     {% include 'bgtemplate.html' %}
 
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="myModalLabel">Created Private and Public Key</h5>
-                    <!-- Close button with explicit JavaScript -->
-                    <button type="button" class="close" id="closeModal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    {{pub_key}}
-                    {{priv_key}}
-                </div>
+    <div
+      class="modal fade"
+      id="myModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="myModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content bg-dark text-light border-0 shadow-lg">
+          <div class="modal-header">
+            <h5 class="modal-title" id="myModalLabel">Your Keys</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="pubKey" class="form-label"
+                ><strong>Public Key</strong></label
+              >
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="pubKey"
+                  class="form-control bg-secondary text-light"
+                  value="{{ pub_key }}"
+                  readonly
+                />
+                <button
+                  class="btn btn-primary"
+                  onclick="copyToClipboard('pubKey')"
+                >
+                  <i class="bi bi-clipboard"></i> Copy
+                </button>
+              </div>
             </div>
+            <div>
+              <label for="privKey" class="form-label"
+                ><strong>Private Key</strong></label
+              >
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="privKey"
+                  class="form-control bg-secondary text-light"
+                  value="{{ priv_key }}"
+                  readonly
+                />
+                <button
+                  class="btn btn-danger"
+                  onclick="copyToClipboard('privKey')"
+                >
+                  <i class="bi bi-clipboard"></i> Copy
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-light"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
         </div>
-    </div>
-
-    <div class="container d-flex flex-column justify-content-center align-items-center vh-100">
-        <h1 class="mb-4">Welcome to SocialApp</h1>
-        <a href="/logout" class="btn btn-danger btn-lg">Logout</a>
+      </div>
     </div>
 
     {% if user_cookie %}
     <div class="container mt-5">
-        <div class="card border-secondary shadow-sm">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Bank Account Login</h5>
-            </div>
-            <div class="card-body bg-white">
-                {% if bank_details %}
-                <div id="account-details" class="d-none">
-                    <div class="row mb-3">
-                        <div class="col-sm-6">
-                            <strong>Account Number:</strong>
-                        </div>
-                        <div class="col-sm-6 text-end">
-                            <span>1234 5678 9012</span>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <strong>Balance:</strong>
-                        </div>
-                        <div class="col-sm-6 text-end text-success">
-                            <span>$5,000.00</span>
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <div id="login-section">
-                    <form action="/bank" method="POST">   
-                        <div class="mb-3">
-                            <label for="privateKey" class="form-label"><strong>Enter Private Key:</strong></label>
-                            <input type="password" name="priv_key" class="form-control" placeholder="Enter your private key">
-                        </div> 
-                        <button type="submit" class="btn btn-secondary w-100">Submit</button>
-                    </form>  
-                </div>
-                {% endif %}
-            </div>
+      <div class="card border-secondary shadow-sm">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">Bank Account Login</h5>
         </div>
+        <div class="card-body bg-white">
+          {% if bank_details %}
+          <div id="account-details" class="">
+            <div class="row mb-3">
+              <div class="col-sm-6">
+                <strong>Account Number:</strong>
+              </div>
+              <div class="col-sm-6 text-end">
+                <span>1234 5678 9012</span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6">
+                <strong>Balance:</strong>
+              </div>
+              <div class="col-sm-6 text-end text-success">
+                <span>$5,000.00</span>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div id="login-section">
+            <form action="/bank" method="POST">
+              <div class="mb-3">
+                <label for="privateKey" class="form-label"
+                  ><strong>Enter Private Key:</strong></label
+                >
+                <input
+                  type="password"
+                  name="priv_key"
+                  class="form-control"
+                  placeholder="Enter your private key"
+                />
+              </div>
+              <button type="submit" class="btn btn-secondary w-100">
+                Submit
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
     {% endif %}
+    <div class="container my-5">
+      <h1 class="mb-4">Transaction History</h1>
+      {% if transactions %}
+      <div class="table-responsive">
+        <table class="table table-dark table-hover table-striped">
+          <thead class="table-primary text-dark">
+            <tr>
+              <th scope="col"><i class="bi bi-hash"></i> Transaction ID</th>
+              <th scope="col"><i class="bi bi-person"></i> Sender ID</th>
+              <th scope="col"><i class="bi bi-person"></i> Receiver ID</th>
+              <th scope="col"><i class="bi bi-cash-coin"></i> Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for transaction in transactions %}
+            <tr>
+              <td>{{ transaction.transaction_id }}</td>
+              <td>{{ transaction.sender_balance_id }}</td>
+              <td>{{ transaction.receiver_balance_id }}</td>
+              <td>${{ transaction.amount }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-warning mt-4" role="alert">
+          <i class="bi bi-info-circle-fill"></i> No transactions found. Start
+          making transactions to see your history here!
+        </div>
+        {% endif %}
+      </div>
+    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -92,13 +192,26 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
     {% if priv_key %}
     <script>
-        $(document).ready(function(){
-            $('#myModal').modal('show');
-        });
-        $('#closeModal').click(function() {
-                $('#myModal').modal('hide');  // Hide the modal when close button is clicked
-            });
+      $(document).ready(function () {
+        $("#myModal").modal("show");
+      });
+      $("#closeModal").click(function () {
+        $("#myModal").modal("hide"); // Hide the modal when close button is clicked
+      });
+      function copyToClipboard(id) {
+        const copyText = document.getElementById(id);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // For mobile devices
+        navigator.clipboard
+          .writeText(copyText.value)
+          .then(() => {
+            alert("Copied: " + copyText.value);
+          })
+          .catch((err) => {
+            alert("Failed to copy!");
+          });
+      }
     </script>
     {% endif %}
-</body>
+  </body>
 </html>

@@ -12,7 +12,7 @@ key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 def generate_rsa_keys():
-    private_key = rsa.generate_private_key(public_exponent=65537,key_size=2048)
+    private_key = rsa.generate_private_key(public_exponent=65537,key_size=1024)
     public_key = private_key.public_key()
     return private_key, public_key
 
@@ -44,7 +44,7 @@ def register_user(fullname,email,phone_no,username,password):
             ).decode('utf-8')
 
         response2 = (supabase.table("Bank")
-                .insert({"encrypted_balance":0,"user_public_key":public_key_pem})
+                .insert({"encrypted_balance":1,"user_public_key":public_key_pem})
                     .execute()
                     )
         return [public_key_pem,private_key_pem]
@@ -63,11 +63,12 @@ def check_user(email,password):
 
 def getBalance(priv_key):
     existing_bank = (
-        supabase.table("Bank").select("*").eq("user_private_key",priv_key).execute()
-    )
+        supabase.table("Bank").select("*").eq("balance_id",priv_key).execute()
+    ).data
     if existing_bank:
-        return existing_bank.encrypted_balance
+        return existing_bank[0]["encrypted_balance"]
     else:
+        print(existing_bank)
         return -1
     
 def getTransactions(balance_id):
@@ -78,3 +79,11 @@ def getTransactions(balance_id):
     transactions = transactions.data
     return [count,transactions]
     
+def getAccount(accountName):
+    account = (
+        supabase.table("Users").select("*").eq("username",accountName).execute()
+    ).data
+    if account:
+        return account
+    else:
+        return -1

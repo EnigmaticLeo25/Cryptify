@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session,jsonify,make_response
 from controller import *
-from database import db
 from controller import supabase
 
 def configure_routes(app):
@@ -31,21 +30,18 @@ def configure_routes(app):
             phone_no = request.form.get('phone_no')
             username = request.form.get('username')
             password = request.form.get('password')
-            new_user = register_user(fullname,email,phone_no,username,password)
-            return redirect(url_for('home'))
+            keys = register_user(fullname,email,phone_no,username,password)
+            return redirect(url_for('home',pub_key=keys[0],priv_key=keys[1]))
+   
     @app.route('/')
     def home():
         auth_token = request.cookies.get('authToken')
+        priv_key = request.args.get('priv_key')
+        pub_key = request.args.get('pub_key')
         if auth_token:
-            users = (
-                supabase.table("User").select().execute()
-            ).data
-            return render_template('home.html',users=users,user_cookie = auth_token)
+            return render_template('home.html',user_cookie = auth_token,priv_key=priv_key)
         else:
-            users = (
-                supabase.table("User").select().execute()
-            ).data
-            return render_template('home.html',users=users)
+            return render_template('home.html',pub_key=pub_key,priv_key=priv_key)
         
     @app.route('/logout')
     def logout():
@@ -76,6 +72,19 @@ def configure_routes(app):
                 supabase.table("User").select().execute()
                 )
                 return render_template('home.html',users=users)
+    @app.route("/database")
+    def database():
+        data_User = (
+                supabase.table("User").select().execute()
+                ).data
+        data_Bank = (
+                supabase.table("Bank").select().execute()
+                ).data
+        data_Transactions = (
+                supabase.table("Transactions").select().execute()
+                ).data
+        return render_template('database.html',data_User=data_User,data_Bank=data_Bank,data_Transactions=data_Transactions)
+
     @app.route("/transactions")
     def transactions():
         # transaction_list = getTransactions(balance_id)

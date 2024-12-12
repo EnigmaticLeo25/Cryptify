@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light text-center">
+    <!-- Include Background Template -->
+    {% include 'bgtemplate.html' %}
+    
+    <div class="container d-flex flex-column justify-content-center align items-center vh-100">
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone No.</th>
+                <th>Username</th>
+            </tr>
+            {% for current_user in data_User %}
+            <tr>
+                <td>{{current_user.fullname}}</td>
+                <td>{{current_user.email}}</td>
+                <td>{{current_user.phone_no}}</td>
+                <td>{{current_user.username}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="container d-flex flex-column justify-content-center align items-center vh-100">
+        <table>
+            <tr>
+                <th>Id</th>
+                <th>Public Key</th>
+                <th>Balance</th>
+            </tr>
+            {% for current_user in data_Bank %}
+            <tr>
+                <td>{{current_user.balance_id}}</td>
+                <td>{{current_user.user_public_key}}</td>
+                <td>{{current_user.encrypted_balance}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="container d-flex flex-column justify-content-center align items-center vh-100">
+        <table>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Date-Time</th>
+                <th>Amount</th>
+            </tr>
+            {% for current_user in data_Transactions %}
+            <tr>
+                <td>{{current_user.transaction_id}}</td>
+                <td>{{current_user.timestamps}}</td>
+                <td>{{current_user.amount}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -40,13 +40,27 @@ def configure_routes(app):
         priv_key = request.args.get('priv_key')
         pub_key = request.args.get('pub_key')
         bank_details_json = request.args.get('bank_details')
+        transactions_sent = request.args.get('transactions_sent')
+        # transactions_sent = transactions_sent.split(",")
+        if transactions_sent:
+            transactions_sent = transactions_sent.replace("'", '"')
+            transactions_sent = json.loads(transactions_sent)
+        else:
+            transactions_sent= None
+        transactions_received = request.args.get('transactions_received')
+        # transactions_received = transactions_received.split(",")
+        if transactions_received:
+            transactions_received = transactions_received.replace("'", '"')
+            transactions_received = json.loads(transactions_received)
+        else:
+            transactions_received = None
         if bank_details_json:
             bank_details_json = bank_details_json.replace("'", '"')
             bank_details = json.loads(bank_details_json)
         else:
             bank_details = None
         if auth_token:
-            return render_template('home.html',user_cookie = auth_token, priv_key = priv_key,pub_key=pub_key, bank_details = bank_details)
+            return render_template('home.html',user_cookie = auth_token, priv_key = priv_key,pub_key=pub_key, bank_details = bank_details,transactions_sent=transactions_sent,transactions_received=transactions_received)
         else:
             return render_template('home.html',pub_key=pub_key,priv_key=priv_key)
         
@@ -64,7 +78,13 @@ def configure_routes(app):
             priv_key = request.form.get('priv_key')
             user = getBalance_priv(priv_key)
             user_json = json.dumps(user)
-            return redirect(url_for('home',bank_details=user_json))
+            transactions = getTransactions(user)
+            # print(transactions)
+            transactions_sent = transactions[0]
+            transactions_sent_json = json.dumps(transactions_sent)
+            transactions_received = transactions[1]
+            transactions_received_json = json.dumps(transactions_received)
+            return redirect(url_for('home',bank_details=user_json,transactions_sent=transactions_sent_json,transactions_received=transactions_received_json))
     @app.route("/database")
     def database():
         data_User = (
@@ -92,14 +112,12 @@ def configure_routes(app):
             transaction = doTransaction(sender,receiver,amount)
             return redirect(url_for('home'))
         
-    # @app.route("/account",methods=['POST'])
-    # def account():
-    #     if request.method == 'POST':
-    #         accountName = request.form.get('accountId')
-    #         account = getAccount(accountName)
-    #         if account == -1:
-    #             flash('Wrong username entered')
-    #             return render_template('transactions.html')
-    #         else:
-    #             return render_template('transactions.html',accountVerified = True)
+    @app.route("/balance",methods=['GET','POST'])
+    def balance():
+        if request.method == "POST":
+            balance_id = request.form.get('balance_id')
+            amount = int(request.form.get('balance_add'))
+            addBalance(balance_id,amount)
+            return redirect(url_for('home'))
+        
     

@@ -121,12 +121,22 @@
             </div>
             <div class="row">
               <div class="col-sm-6">
-                <strong>Balance:</strong>
+                <strong>Current Balance:</strong>
               </div>
               <div class="col-sm-6 text-end text-success">
                 <span>{{bank_details.encrypted_balance}}</span>
               </div>
+              <form action="/balance" method="POST">
+              <input
+                  name="balance_add"
+                  class="form-control"
+                  placeholder="Add balance"/>
+              <input type="hidden" name="balance_id" name="hiddenData" value={{bank_details.balance_id}}>
             </div>
+            <button type="submit" class="btn btn-secondary w-100">
+              Add Balance
+            </button>
+          </form>
           </div>
           {% else %}
           <div id="login-section">
@@ -150,9 +160,9 @@
       </div>
     </div>
     {% endif %}
-    <div class="container my-5">
-      <h1 class="mb-4">Transaction History</h1>
-      {% if transactions %}
+      {% if transactions_sent %}
+      <div class="container my-5"></div>
+      <h1 class="mb-4">Transactions Sent</h1>
       <div class="table-responsive">
         <table class="table table-dark table-hover table-striped">
           <thead class="table-primary text-dark">
@@ -164,15 +174,47 @@
             </tr>
           </thead>
           <tbody>
-            {% for transaction in transactions %}
+            {% for transaction in transactions_sent %}
+            <tr>
+              <td>{{ transaction['transaction_id'] }}</td>
+              <td>{{ transaction.sender_balance_id }}</td>
+              <td>{{ transaction.receiver_balance_id }}</td>
+              <td>{{ transaction.amount }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-warning mt-4" role="alert">
+          <i class="bi bi-info-circle-fill"></i> No transactions found. Start
+          making transactions to see your history here!
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% if transactions_received %}
+      <div class="container my-5"></div>
+      <h1 class="mb-4">Transactions Received</h1>
+      <div class="table-responsive">
+        <table class="table table-dark table-hover table-striped">
+          <thead class="table-primary text-dark">
+            <tr>
+              <th scope="col"><i class="bi bi-hash"></i> Transaction ID</th>
+              <th scope="col"><i class="bi bi-person"></i> Sender ID</th>
+              <th scope="col"><i class="bi bi-person"></i> Receiver ID</th>
+              <th scope="col"><i class="bi bi-cash-coin"></i> Amount</th>
+            </tr>
+          </thead> 
+            {% for transaction in transactions_received %}
+            <tbody>
             <tr>
               <td>{{ transaction.transaction_id }}</td>
               <td>{{ transaction.sender_balance_id }}</td>
               <td>{{ transaction.receiver_balance_id }}</td>
               <td>${{ transaction.amount }}</td>
             </tr>
+            </tbody>
             {% endfor %}
-          </tbody>
         </table>
         {% else %}
         <div class="alert alert-warning mt-4" role="alert">

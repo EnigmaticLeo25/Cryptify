@@ -48,15 +48,9 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
-            {% if current_user %}
-            <li class="nav-item">{{current_user.username}}</li>
-            {% endif %}
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="./">Home</a>
-            </li>
             {% if user_cookie %}
             <li class="nav-item">
-              <a class="nav-link" href="#">My Account</a>
+              <p class="nav-link">{{user_cookie}}</p>
             </li>
             {% else %}
             <li class="nav-item">
@@ -65,6 +59,10 @@
               >
             </li>
             {% endif %}
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="./">Home</a>
+            </li>
+            
             <li class="nav-item">
               <a class="nav-link" href="/transactions">Transactions</a>
             </li>

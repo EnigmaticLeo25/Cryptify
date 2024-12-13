@@ -43,7 +43,6 @@ def fix_pem_public_key_format(pem_key):
     footer = "-----END PUBLIC KEY-----"
     # Ensure the header and footer are removed if present
     # Debug: Check initial input
-    print("Original Key:\n", pem_key)
 
     # Ensure the header is removed
     if pem_key.startswith(header):
@@ -54,25 +53,21 @@ def fix_pem_public_key_format(pem_key):
     pem_key = pem_key[: -len(footer)].strip()
     
     # Debug: Check after removing header/footer
-    print("After Removing Header/Footer:\n", pem_key)
     
     # Remove intermediate newlines in the key data
     key_data = pem_key.replace("\n", "").replace("\r", "")
     
     # Debug: Check cleaned key data
-    print("Clean Key Data:\n", key_data)
     
     # Reformat key data into 64-character chunks
     key_data_formatted = "\n".join([key_data[i:i+64] for i in range(0, len(key_data), 64)])
     
     # Debug: Check formatted key data
-    print("Formatted Key Data:\n", key_data_formatted)
     
     # Reconstruct the PEM key
     fixed_pem_key = f"{header}\n{key_data_formatted}\n{footer}"
     
     # Debug: Check final reconstructed key
-    print("Final PEM Key:\n", fixed_pem_key)
     return fixed_pem_key
 
 def register_user(fullname,email,phone_no,username,password):
@@ -139,28 +134,26 @@ def getBalance_priv(priv_key):
     if existing_bank:
         return existing_bank[0]
     else:
-        print(existing_bank)
         raise ValueError("Wrong Key")
 
 def getBalance_pub(pub_key):
     formated_pub_key = fix_pem_public_key_format(pub_key)
-    print(formated_pub_key)
     existing_bank = (
         supabase.table("Bank").select("*").eq("user_public_key",formated_pub_key+'\n').execute()
     ).data
     if existing_bank:
         return existing_bank[0]
     else:
-        print(existing_bank)
         raise ValueError("Wrong Key")
     
-def getTransactions(balance_id):
-    transactions = (
-        supabase.table("Transactions").select("*").eq("user_id",balance_id).execute()
-    )
-    count = transactions.count
-    transactions = transactions.data
-    return [count,transactions]
+def getTransactions(user):
+    transactions_sent = (
+        supabase.table("Transactions").select("*").eq("sender_balance_id",user['balance_id']).execute()
+    ).data
+    transactions_received = (
+        supabase.table("Transactions").select("*").eq("receiver_balance_id",user['balance_id']).execute()
+    ).data
+    return [transactions_sent,transactions_received]
 
 def generate_nonce():
     return os.urandom(16).hex()
@@ -175,13 +168,11 @@ def generate_proof(balance, transaction_amount, nonce):
     if balance < transaction_amount:
         raise ValueError("Insufficient balance!")
     difference = balance - transaction_amount
-    print(difference)
     return difference, nonce
 
 def verify_proof(commitment, difference, nonce, transaction_amount):
     # Recreate the original balance
     recreated_balance = difference + transaction_amount
-    print(recreated_balance)
     # Verify the commitment
     data = f"{recreated_balance}:{nonce}".encode()
     expected_commitment = hashlib.sha256(data).hexdigest()
@@ -209,3 +200,15 @@ def doTransaction(sender,receiver,amount):
             )
     else:
         raise ValueError("Transaction amount not Valid")
+
+def addBalance(balance_id,amount):
+    existing_bank = (
+        supabase.table("Bank").select("*").eq("balance_id",balance_id).execute()
+    ).data
+    receiver_new_balance = existing_bank[0]['encrypted_balance']+amount
+    receiver_new_commit = create_commitment(receiver_new_balance,existing_bank[0]["nonce"])
+    res = (
+        supabase.table("Bank").update({"encrypted_balance":receiver_new_balance,"commitment":receiver_new_commit}).eq("balance_id",balance_id).execute()
+    )
+    return existing_bank
+

@@ -40,13 +40,38 @@ def fix_pem_public_key_format(pem_key):
     # Split into parts: header, footer, and key data
     header = "-----BEGIN PUBLIC KEY-----"
     footer = "-----END PUBLIC KEY-----"
-    key_data = pem_key.replace(header, "").replace(footer, "").replace("\n", "").replace("\r", "")
+    # Ensure the header and footer are removed if present
+    # Debug: Check initial input
+    print("Original Key:\n", pem_key)
+
+    # Ensure the header is removed
+    if pem_key.startswith(header):
+        pem_key = pem_key[len(header):].strip()
+    
+    # Ensure the footer is removed
+    
+    pem_key = pem_key[: -len(footer)].strip()
+    
+    # Debug: Check after removing header/footer
+    print("After Removing Header/Footer:\n", pem_key)
+    
+    # Remove intermediate newlines in the key data
+    key_data = pem_key.replace("\n", "").replace("\r", "")
+    
+    # Debug: Check cleaned key data
+    print("Clean Key Data:\n", key_data)
     
     # Reformat key data into 64-character chunks
     key_data_formatted = "\n".join([key_data[i:i+64] for i in range(0, len(key_data), 64)])
     
+    # Debug: Check formatted key data
+    print("Formatted Key Data:\n", key_data_formatted)
+    
     # Reconstruct the PEM key
     fixed_pem_key = f"{header}\n{key_data_formatted}\n{footer}"
+    
+    # Debug: Check final reconstructed key
+    print("Final PEM Key:\n", fixed_pem_key)
     return fixed_pem_key
 
 def register_user(fullname,email,phone_no,username,password):
@@ -120,7 +145,7 @@ def getBalance_pub(pub_key):
     formated_pub_key = fix_pem_public_key_format(pub_key)
     print(formated_pub_key)
     existing_bank = (
-        supabase.table("Bank").select("*").eq("user_public_key",pub_key).execute()
+        supabase.table("Bank").select("*").eq("user_public_key",formated_pub_key+'\n').execute()
     ).data
     if existing_bank:
         return existing_bank[0]
@@ -167,7 +192,13 @@ def doTransaction(sender,receiver,amount):
     is_valid = verify_proof(sender['commitment'],difference,proof_nonce,amount)
 
     if is_valid:
-        sender['encrypted_balance'] = sender['encrypted_balance']-amount
-        receiver['encrypted_balance'] = receiver['encrypted_balance']+amount
+        sender_new_balance = sender['encrypted_balance']-amount
+        res = (
+            supabase.table("Bank").update({"encrypted_balance":sender_new_balance}).eq("balance_id",sender["balance_id"]).execute()
+        )
+        receiver_new_balance = receiver['encrypted_balance']+amount
+        res = (
+            supabase.table("Bank").update({"encrypted_balance":receiver_new_balance}).eq("balance_id",receiver["balance_id"]).execute()
+        )
     else:
         raise ValueError("Transaction amount not Valid")

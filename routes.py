@@ -48,7 +48,7 @@ def configure_routes(app):
         if auth_token:
             return render_template('home.html',user_cookie = auth_token, priv_key = priv_key,pub_key=pub_key, bank_details = bank_details)
         else:
-            return render_template('home.html')
+            return render_template('home.html',pub_key=pub_key,priv_key=priv_key)
         
     @app.route('/logout')
     def logout():
@@ -85,7 +85,7 @@ def configure_routes(app):
         if request.method == "POST":
             sender_priv_key = request.form.get('sender_priv_key')
             receiver_pub_key = request.form.get('receiver_pub_key')
-            amount = request.form.get('amount')
+            amount = int(request.form.get('amount'))
 
             sender = getBalance_priv(sender_priv_key)
             receiver = getBalance_pub(receiver_pub_key)

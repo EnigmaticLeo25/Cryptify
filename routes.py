@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session,jsonify,make_response
 from controller import *
 from controller import supabase
+import json
 
 def configure_routes(app):
     @app.route('/login',methods=['GET','POST'])
@@ -38,10 +39,16 @@ def configure_routes(app):
         auth_token = request.cookies.get('authToken')
         priv_key = request.args.get('priv_key')
         pub_key = request.args.get('pub_key')
-        if auth_token:
-            return render_template('home.html',user_cookie = auth_token,priv_key=priv_key)
+        bank_details_json = request.args.get('bank_details')
+        if bank_details_json:
+            bank_details_json = bank_details_json.replace("'", '"')
+            bank_details = json.loads(bank_details_json)
         else:
-            return render_template('home.html',pub_key=pub_key,priv_key=priv_key)
+            bank_details = None
+        if auth_token:
+            return render_template('home.html',user_cookie = auth_token, priv_key = priv_key,pub_key=pub_key, bank_details = bank_details)
+        else:
+            return render_template('home.html')
         
     @app.route('/logout')
     def logout():
@@ -55,26 +62,9 @@ def configure_routes(app):
             
             auth_token = request.cookies.get('authToken')
             priv_key = request.form.get('priv_key')
-            balance = getBalance(priv_key)
-            print(auth_token)
-            if auth_token:
-                if balance!=-1:
-                    users = (
-                supabase.table("User").select().execute()
-            )
-                    print(balance)
-                    return render_template('home.html',users=users,user_cookie = auth_token,bank_details=balance)
-                else:
-                    users = (
-                supabase.table("User").select().execute()
-            )
-                    print(balance)
-                    return render_template('home.html',users=users,user_cookie = auth_token)    
-            else:
-                users = (
-                supabase.table("User").select().execute()
-                )
-                return render_template('home.html',users=users)
+            user = getBalance_priv(priv_key)
+            user_json = json.dumps(user)
+            return redirect(url_for('home',bank_details=user_json))
     @app.route("/database")
     def database():
         data_User = (
@@ -88,21 +78,28 @@ def configure_routes(app):
                 ).data
         return render_template('database.html',data_User=data_User,data_Bank=data_Bank,data_Transactions=data_Transactions)
 
-    @app.route("/transactions")
+    @app.route("/transactions",methods=['GET','POST'])
     def transactions():
-        # transaction_list = getTransactions(balance_id)
-        # if(transaction_list[1]):
-        #     return render_template('transactions.html',count = transaction_list[0],transactions = transaction_list[1])
-        return render_template("transactions.html")
+        if request.method == "GET":
+            return render_template("transactions.html")
+        if request.method == "POST":
+            sender_priv_key = request.form.get('sender_priv_key')
+            receiver_pub_key = request.form.get('receiver_pub_key')
+            amount = request.form.get('amount')
+
+            sender = getBalance_priv(sender_priv_key)
+            receiver = getBalance_pub(receiver_pub_key)
+            transaction = doTransaction(sender,receiver,amount)
+            return redirect(url_for('home'))
         
-    @app.route("/account",methods=['POST'])
-    def account():
-        if request.method == 'POST':
-            accountName = request.form.get('accountId')
-            account = getAccount(accountName)
-            if account == -1:
-                flash('Wrong username entered')
-                return render_template('transactions.html')
-            else:
-                return render_template('transactions.html',accountVerified = True)
+    # @app.route("/account",methods=['POST'])
+    # def account():
+    #     if request.method == 'POST':
+    #         accountName = request.form.get('accountId')
+    #         account = getAccount(accountName)
+    #         if account == -1:
+    #             flash('Wrong username entered')
+    #             return render_template('transactions.html')
+    #         else:
+    #             return render_template('transactions.html',accountVerified = True)
     

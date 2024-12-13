@@ -4,6 +4,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes,serialization
+import hashlib
 
 load_dotenv()
 
@@ -15,6 +16,38 @@ def generate_rsa_keys():
     private_key = rsa.generate_private_key(public_exponent=65537,key_size=1024)
     public_key = private_key.public_key()
     return private_key, public_key
+
+def fix_pem_private_key_format(pem_key):
+    # Remove any unnecessary whitespaces and ensure only key data remains
+    pem_key = pem_key.strip()
+    
+    # Split into parts: header, footer, and key data
+    header = "-----BEGIN PRIVATE KEY-----"
+    footer = "-----END PRIVATE KEY-----"
+    key_data = pem_key.replace(header, "").replace(footer, "").replace("\n", "").replace("\r", "")
+    
+    # Reformat key data into 64-character chunks
+    key_data_formatted = "\n".join([key_data[i:i+64] for i in range(0, len(key_data), 64)])
+    
+    # Reconstruct the PEM key
+    fixed_pem_key = f"{header}\n{key_data_formatted}\n{footer}"
+    return fixed_pem_key
+
+def fix_pem_public_key_format(pem_key):
+    # Remove any unnecessary whitespaces and ensure only key data remains
+    pem_key = pem_key.strip()
+    
+    # Split into parts: header, footer, and key data
+    header = "-----BEGIN PUBLIC KEY-----"
+    footer = "-----END PUBLIC KEY-----"
+    key_data = pem_key.replace(header, "").replace(footer, "").replace("\n", "").replace("\r", "")
+    
+    # Reformat key data into 64-character chunks
+    key_data_formatted = "\n".join([key_data[i:i+64] for i in range(0, len(key_data), 64)])
+    
+    # Reconstruct the PEM key
+    fixed_pem_key = f"{header}\n{key_data_formatted}\n{footer}"
+    return fixed_pem_key
 
 def register_user(fullname,email,phone_no,username,password):
     user = (supabase.table("User").select("*")
@@ -43,8 +76,11 @@ def register_user(fullname,email,phone_no,username,password):
             format=serialization.PublicFormat.SubjectPublicKeyInfo  # Standard public key format
             ).decode('utf-8')
 
+        nonce = generate_nonce()
+        commitment = create_commitment(1, nonce)
+
         response2 = (supabase.table("Bank")
-                .insert({"encrypted_balance":1,"user_public_key":public_key_pem})
+                .insert({"encrypted_balance":1,"user_public_key":public_key_pem,"commitment":commitment,"nonce":nonce})
                     .execute()
                     )
         return [public_key_pem,private_key_pem]
@@ -61,15 +97,36 @@ def check_user(email,password):
         return_details = [False,existing_user.data]
         return return_details
 
-def getBalance(priv_key):
+def getBalance_priv(priv_key):
+    formated_priv_key = fix_pem_private_key_format(priv_key)
+    reconstructed_private_key = serialization.load_pem_private_key(formated_priv_key.encode('utf-8'),password=None)
+    reconstructed_public_key = reconstructed_private_key.public_key()
+
+    reconstructed_public_key_pem = reconstructed_public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo  # Standard public key format
+            ).decode('utf-8')
+    
     existing_bank = (
-        supabase.table("Bank").select("*").eq("balance_id",priv_key).execute()
+        supabase.table("Bank").select("*").eq("user_public_key",reconstructed_public_key_pem).execute()
     ).data
     if existing_bank:
-        return existing_bank[0]["encrypted_balance"]
+        return existing_bank[0]
     else:
         print(existing_bank)
-        return -1
+        raise ValueError("Wrong Key")
+
+def getBalance_pub(pub_key):
+    formated_pub_key = fix_pem_public_key_format(pub_key)
+    print(formated_pub_key)
+    existing_bank = (
+        supabase.table("Bank").select("*").eq("user_public_key",pub_key).execute()
+    ).data
+    if existing_bank:
+        return existing_bank[0]
+    else:
+        print(existing_bank)
+        raise ValueError("Wrong Key")
     
 def getTransactions(balance_id):
     transactions = (
@@ -78,12 +135,39 @@ def getTransactions(balance_id):
     count = transactions.count
     transactions = transactions.data
     return [count,transactions]
+
+def generate_nonce():
+    return os.urandom(16).hex()
+
+def create_commitment(balance, nonce):
+    # Combine balance and nonce, and hash them
+    data = f"{balance}:{nonce}".encode()
+    commitment = hashlib.sha256(data).hexdigest()
+    return commitment
+
+def generate_proof(balance, transaction_amount, nonce):
+    if balance < transaction_amount:
+        raise ValueError("Insufficient balance!")
+    difference = balance - transaction_amount
+    return difference, nonce
+
+def verify_proof(commitment, difference, nonce, transaction_amount):
+    # Recreate the original balance
+    recreated_balance = difference + transaction_amount
     
-def getAccount(accountName):
-    account = (
-        supabase.table("Users").select("*").eq("username",accountName).execute()
-    ).data
-    if account:
-        return account
+    # Verify the commitment
+    data = f"{recreated_balance}:{nonce}".encode()
+    expected_commitment = hashlib.sha256(data).hexdigest()
+    
+    return expected_commitment == commitment and difference >= 0
+
+def doTransaction(sender,receiver,amount):
+    balance = sender['encrypted_balance']
+    difference, proof_nonce = generate_proof(balance,amount,sender['nonce'])
+    is_valid = verify_proof(sender['commitment'],difference,proof_nonce,amount)
+
+    if is_valid:
+        sender['encrypted_balance'] = sender['encrypted_balance']-amount
+        receiver['encrypted_balance'] = receiver['encrypted_balance']+amount
     else:
-        return -1
+        raise ValueError("Transaction amount not Valid")

@@ -116,7 +116,7 @@
                 <strong>Account Number:</strong>
               </div>
               <div class="col-sm-6 text-end">
-                <span>1234 5678 9012</span>
+                <span>{{ bank_details['balance_id'] | default('N/A') }}</span>
               </div>
             </div>
             <div class="row">
@@ -124,7 +124,7 @@
                 <strong>Balance:</strong>
               </div>
               <div class="col-sm-6 text-end text-success">
-                <span>$5,000.00</span>
+                <span>{{bank_details.encrypted_balance}}</span>
               </div>
             </div>
           </div>
@@ -132,15 +132,13 @@
           <div id="login-section">
             <form action="/bank" method="POST">
               <div class="mb-3">
-                <label for="privateKey" class="form-label"
-                  ><strong>Enter Private Key:</strong></label
-                >
+                <label for="privateKey" class="form-label">
+                  <strong>Enter Private Key:</strong>
+                </label>
                 <input
-                  type="password"
                   name="priv_key"
                   class="form-control"
-                  placeholder="Enter your private key"
-                />
+                  placeholder="Enter your private key"/>
               </div>
               <button type="submit" class="btn btn-secondary w-100">
                 Submit

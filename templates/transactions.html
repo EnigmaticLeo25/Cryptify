@@ -21,24 +21,37 @@
         style="width: 25rem; padding: 1.5rem; border-radius: 12px"
       >
         <h3 class="text-center mb-4">Enter Account Details</h3>
-        <form action="/account">
-          {% if accountVerified %}
+        <form action="/transactions" method="POST">
           <div class="form-group mb-3">
-            <label for="accountInput" class="form-label">Account Name</label>
             <div class="input-group">
               <span class="input-group-text bg-secondary text-light">
                 <i class="bi bi-wallet2"></i>
               </span>
               <input
                 type="text"
+                name="sender_priv_key"
                 id="accountInput"
                 class="form-control bg-secondary text-light border-0"
-                placeholder="Enter account name"
+                placeholder="Enter your Private Key"
                 required
               />
             </div>
           </div>
-          {% else %}
+          <div class="form-group mb-3">
+            <div class="input-group">
+              <span class="input-group-text bg-secondary text-light">
+                <i class="bi bi-wallet2"></i>
+              </span>
+              <input
+                type="text"
+                name="receiver_pub_key"
+                id="accountInput"
+                class="form-control bg-secondary text-light border-0"
+                placeholder="Enter Receiver Public Key"
+                required
+              />
+            </div>
+          </div>
           <div class="form-group mb-3">
             <label for="amountInput" class="form-label"
               >Amount to Transfer</label
@@ -49,6 +62,7 @@
               </span>
               <input
                 type="number"
+                name="amount"
                 id="amountInput"
                 class="form-control bg-secondary text-light border-0"
                 placeholder="Enter amount"
@@ -56,7 +70,6 @@
               />
             </div>
           </div>
-          {% endif %}
           <button type="submit" class="btn btn-primary w-100">
             <i class="bi bi-check-circle"></i> Submit
           </button>

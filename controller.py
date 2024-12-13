@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes,serialization
 import hashlib
+from datetime import datetime
 
 load_dotenv()
 
@@ -174,12 +175,13 @@ def generate_proof(balance, transaction_amount, nonce):
     if balance < transaction_amount:
         raise ValueError("Insufficient balance!")
     difference = balance - transaction_amount
+    print(difference)
     return difference, nonce
 
 def verify_proof(commitment, difference, nonce, transaction_amount):
     # Recreate the original balance
     recreated_balance = difference + transaction_amount
-    
+    print(recreated_balance)
     # Verify the commitment
     data = f"{recreated_balance}:{nonce}".encode()
     expected_commitment = hashlib.sha256(data).hexdigest()
@@ -193,12 +195,17 @@ def doTransaction(sender,receiver,amount):
 
     if is_valid:
         sender_new_balance = sender['encrypted_balance']-amount
+        sender_new_commit = create_commitment(sender_new_balance,sender["nonce"])
         res = (
-            supabase.table("Bank").update({"encrypted_balance":sender_new_balance}).eq("balance_id",sender["balance_id"]).execute()
+            supabase.table("Bank").update({"encrypted_balance":sender_new_balance,"commitment":sender_new_commit}).eq("balance_id",sender["balance_id"]).execute()
         )
         receiver_new_balance = receiver['encrypted_balance']+amount
+        receiver_new_commit = create_commitment(receiver_new_balance,receiver["nonce"])
         res = (
-            supabase.table("Bank").update({"encrypted_balance":receiver_new_balance}).eq("balance_id",receiver["balance_id"]).execute()
+            supabase.table("Bank").update({"encrypted_balance":receiver_new_balance,"commitment":receiver_new_commit}).eq("balance_id",receiver["balance_id"]).execute()
         )
+        res = (
+            supabase.table("Transactions").insert({"timestamp":datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),"sender_balance_id":sender["balance_id"],"receiver_balance_id":receiver["balance_id"],"amount":amount}).execute()
+            )
     else:
         raise ValueError("Transaction amount not Valid")
